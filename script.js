@@ -132,10 +132,11 @@ function renderCard() {
 
     const currentCard = cards[currentIndex];
     currencyCode.textContent = currentCard.currency;
-    rateToTWD.textContent = currentCard.rateTWD && currentCard.rateTWD !== '-'
-        ? `1 ${currentCard.currency} = ${currentCard.rateTWD} TWD`
+    const rateValue = Number(currentCard.rateTWD);
+    rateToTWD.textContent = Number.isFinite(rateValue)
+        ? `1 ${currentCard.currency} = ${rateValue.toFixed(2)} TWD`
         : '匯率尚未輸入';
-    analysisText.textContent = currentCard.analysis;
+    analysisText.textContent = currentCard.analysis || '尚無備忘錄';
     cardIndicator.textContent = `${currentIndex + 1} / ${cards.length}`;
 
     prevBtn.disabled = currentIndex === 0;
@@ -240,7 +241,7 @@ async function autoFillCurrencyData() {
 
 function saveCurrencyCard() {
     const currency = getSelectedCurrency();
-    const rateTWD = rateToTWDInput.value.trim();
+    const rawRateTWD = rateToTWDInput.value.trim();
     const analysis = analysisTextarea.value.trim();
 
     if (!currency || currency.length !== 3) {
@@ -248,8 +249,9 @@ function saveCurrencyCard() {
         return;
     }
 
-    if (!rateTWD) {
-        showMessage('請填入對新台幣的匯率', 'error');
+    const parsedRate = parseFloat(rawRateTWD);
+    if (isNaN(parsedRate) || parsedRate <= 0) {
+        showMessage('請填入有效的對新台幣匯率數值', 'error');
         return;
     }
 
@@ -258,6 +260,7 @@ function saveCurrencyCard() {
         return;
     }
 
+    const rateTWD = parsedRate.toFixed(2);
     const existingIndex = cards.findIndex(card => card.currency === currency);
 
     if (existingIndex !== -1) {
@@ -360,7 +363,18 @@ function loadCards() {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
         try {
-            cards = JSON.parse(stored);
+            cards = JSON.parse(stored).map(card => {
+                const currency = card.currency || '';
+                const rawRate = card.rateTWD;
+                const hasValidRate = rawRate !== null && rawRate !== undefined && rawRate !== '' && rawRate !== '-';
+                const defaultRate = DEFAULT_CARDS.find(d => d.currency === currency)?.rateTWD || '-';
+
+                return {
+                    currency: currency,
+                    rateTWD: hasValidRate ? String(rawRate) : defaultRate,
+                    analysis: card.analysis || ''
+                };
+            });
         } catch (error) {
             console.error('Failed to parse stored cards:', error);
             cards = [];

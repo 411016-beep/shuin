@@ -186,6 +186,7 @@ body {
 
 /* 背面樣式 */
 .card-back {
+    -webkit-transform: rotateY(180deg);
     transform: rotateY(180deg);
     flex-direction: column;
     justify-content: flex-start;
