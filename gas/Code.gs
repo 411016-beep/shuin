@@ -11,11 +11,38 @@ const SHEET_NAME = '匯率卡片';
 /**
  * 處理 POST 請求 - 接收前端傳來的卡片資料
  */
+function doGet(e) {
+  const action = e.parameter.action;
+
+  if (action === 'getCards') {
+    const cards = getCardsFromSheet();
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'success',
+      cards: cards
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (action === 'fetchRate' && e.parameter.currency) {
+    const currency = e.parameter.currency.toUpperCase();
+    const rate = fetchRateToTWD(currency);
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'success',
+      currency: currency,
+      rateTWD: rate
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({
+    status: 'error',
+    message: '未知的操作'
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
 function doPost(e) {
   try {
     // 解析請求資料
     const payload = JSON.parse(e.postData.contents);
-    
+
     if (payload.action === 'saveCards') {
       saveCardsToSheet(payload.cards);
       return ContentService.createTextOutput(JSON.stringify({
@@ -23,12 +50,12 @@ function doPost(e) {
         message: '卡片已保存至試算表'
       })).setMimeType(ContentService.MimeType.JSON);
     }
-    
+
     return ContentService.createTextOutput(JSON.stringify({
       status: 'error',
       message: '未知的操作'
     })).setMimeType(ContentService.MimeType.JSON);
-    
+
   } catch (error) {
     return ContentService.createTextOutput(JSON.stringify({
       status: 'error',
@@ -42,18 +69,18 @@ function doPost(e) {
  */
 function saveCardsToSheet(cards) {
   const sheet = getOrCreateSheet();
-  
+
   // 清空現有資料（保留標題列）
   const dataRange = sheet.getRange(2, 1, sheet.getLastRow() - 1, 3);
   dataRange.clearContent();
-  
+
   // 寫入新資料
   const data = cards.map(card => [
     card.currency,
     card.rateTWD,
     card.analysis
   ]);
-  
+
   if (data.length > 0) {
     sheet.getRange(2, 1, data.length, 3).setValues(data);
   }
@@ -70,14 +97,37 @@ function saveCardsToSheet(cards) {
 function getOrCreateSheet() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sheet = ss.getSheetByName(SHEET_NAME);
-  
+
   if (!sheet) {
     sheet = ss.insertSheet(SHEET_NAME);
     // 設定標題列
     sheet.getRange(1, 1, 1, 3).setValues([['幣別', '對台幣匯率', '備忘錄']]);
   }
-  
+
   return sheet;
+}
+
+function getCardsFromSheet() {
+  const sheet = getOrCreateSheet();
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow < 2) {
+    return [];
+  }
+
+  const values = sheet.getRange(2, 1, lastRow - 1, 3).getValues();
+  return values.map(row => ({
+    currency: row[0],
+    rateTWD: row[1],
+    analysis: row[2]
+  }));
+}
+
+function fetchRateToTWD(currency) {
+  const url = `https://api.exchangerate.host/latest?base=${currency}&symbols=TWD`;
+  const response = UrlFetchApp.fetch(url);
+  const data = JSON.parse(response.getContentText());
+  return data?.rates?.TWD || null;
 }
 
 /**
@@ -88,17 +138,15 @@ function test() {
     {
       currency: 'USD',
       rateTWD: '31.50',
-      rateJPY: '150.25',
       analysis: '美元走勢穩定'
     },
     {
       currency: 'EUR',
       rateTWD: '34.20',
-      rateJPY: '165.30',
       analysis: '歐元小幅上升'
     }
   ];
-  
+
   saveCardsToSheet(testCards);
   Logger.log('測試完成');
 }
