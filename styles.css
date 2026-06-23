@@ -49,67 +49,7 @@ body {
     box-shadow: 0 16px 50px rgba(15, 33, 56, 0.12);
 }
 
-    /* 使用 opacity + z-index 來切換正/背面，避免 3D 造成鏡像文字問題 */
-    .card {
-        width: 100%;
-        height: 100%;
-        position: relative;
-        border-radius: 24px;
-        overflow: hidden;
-    }
-
-    .card-face {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: var(--card-gradient);
-        border-radius: 24px;
-        box-shadow: var(--shadow);
-        padding: 2rem;
-        border: 1px solid rgba(15, 33, 56, 0.08);
-        transition: opacity 0.35s ease, transform 0.35s ease;
-    }
-
-    .card-front {
-        z-index: 2;
-        opacity: 1;
-        transform: translateY(0);
-        pointer-events: auto;
-        flex-direction: column;
-        gap: 1rem;
-        align-items: center;
-    }
-
-    .card-back {
-        z-index: 1;
-        opacity: 0;
-        transform: translateY(8px) scale(0.995);
-        pointer-events: none;
-        flex-direction: column;
-        justify-content: flex-start;
-        padding: 2rem;
-        overflow-y: auto;
-    }
-
-    /* 翻轉時顯示背面 */
-    .card.flipped .card-front {
-        opacity: 0;
-        z-index: 1;
-        pointer-events: none;
-        transform: translateY(-8px) scale(0.995);
-    }
-
-    .card.flipped .card-back {
-        opacity: 1;
-        z-index: 2;
-        pointer-events: auto;
-        transform: translateY(0) scale(1);
-    }
-    justify-content: center;
-    align-items: center;
-}
+/* 卡片（樣式在下方定義） */
 
 #management-page.active {
     display: block;
@@ -126,9 +66,8 @@ body {
     padding: 1rem 0;
 }
 
-/* 3D 卡片翻轉效果 */
+/* 卡片容器（使用 opacity + z-index 切換，避免 3D rotateY 導致鏡像文字） */
 .card-wrapper {
-    perspective: 1000px;
     width: 100%;
     max-width: 500px;
     height: 300px;
@@ -139,22 +78,18 @@ body {
     width: 100%;
     height: 100%;
     position: relative;
-    -webkit-transform-style: preserve-3d;
-    transform-style: preserve-3d;
-    transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transition: opacity 0.35s ease, transform 0.35s ease;
     border-radius: 24px;
     overflow: hidden;
 }
 
 .card.flipped {
-    transform: rotateY(180deg);
+    /* 保留 class 作為狀態標記，但不使用 rotateY */
 }
 
 .card-face {
     position: absolute;
     inset: 0;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -163,15 +98,18 @@ body {
     box-shadow: var(--shadow);
     padding: 2rem;
     border: 1px solid rgba(15, 33, 56, 0.08);
+    transition: opacity 0.35s ease, transform 0.35s ease;
 }
 
 /* 正面樣式 */
 .card-front {
+    z-index: 2;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
     flex-direction: column;
     gap: 1rem;
     align-items: center;
-    -webkit-transform: rotateY(0deg);
-    transform: rotateY(0deg);
 }
 
 .currency-code {
@@ -191,17 +129,29 @@ body {
 
 /* 背面樣式 */
 .card-back {
-    -webkit-transform: rotateY(180deg);
-    transform: rotateY(180deg);
+    z-index: 1;
+    opacity: 0;
+    transform: translateY(8px) scale(0.995);
+    pointer-events: none;
     flex-direction: column;
     justify-content: flex-start;
     padding: 2rem;
     overflow-y: auto;
 }
 
-.card.flipped {
-    -webkit-transform: rotateY(180deg);
-    transform: rotateY(180deg);
+/* 翻轉時顯示背面（使用 opacity + z-index 切換，避免 3D mirror） */
+.card.flipped .card-front {
+    opacity: 0;
+    z-index: 1;
+    pointer-events: none;
+    transform: translateY(-8px) scale(0.995);
+}
+
+.card.flipped .card-back {
+    opacity: 1;
+    z-index: 2;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
 }
 
 .card-back-content {
