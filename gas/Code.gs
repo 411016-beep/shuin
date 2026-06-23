@@ -44,19 +44,18 @@ function saveCardsToSheet(cards) {
   const sheet = getOrCreateSheet();
   
   // 清空現有資料（保留標題列）
-  const dataRange = sheet.getRange(2, 1, sheet.getLastRow() - 1, 4);
+  const dataRange = sheet.getRange(2, 1, sheet.getLastRow() - 1, 3);
   dataRange.clearContent();
   
   // 寫入新資料
   const data = cards.map(card => [
     card.currency,
     card.rateTWD,
-    card.rateJPY,
     card.analysis
   ]);
   
   if (data.length > 0) {
-    sheet.getRange(2, 1, data.length, 4).setValues(data);
+    sheet.getRange(2, 1, data.length, 3).setValues(data);
   }
   
   // 記錄最後更新時間
@@ -75,7 +74,7 @@ function getOrCreateSheet() {
   if (!sheet) {
     sheet = ss.insertSheet(SHEET_NAME);
     // 設定標題列
-    sheet.getRange(1, 1, 1, 4).setValues([['幣別', '對台幣匯率', '對日圓匯率', '備忘錄']]);
+    sheet.getRange(1, 1, 1, 3).setValues([['幣別', '對台幣匯率', '備忘錄']]);
   }
   
   return sheet;
