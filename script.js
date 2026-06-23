@@ -2,6 +2,14 @@
 // 全局變數
 // ========================
 
+const DEFAULT_CARDS = [
+    { currency: 'EUR', rateTWD: '-', rateJPY: '-', analysis: '歐元匯率卡片' },
+    { currency: 'GBP', rateTWD: '-', rateJPY: '-', analysis: '英鎊匯率卡片' },
+    { currency: 'AUD', rateTWD: '-', rateJPY: '-', analysis: '澳幣匯率卡片' },
+    { currency: 'JPY', rateTWD: '-', rateJPY: '-', analysis: '日圓匯率卡片' },
+    { currency: 'USD', rateTWD: '-', rateJPY: '-', analysis: '美元匯率卡片' }
+];
+
 let cards = [];
 let currentIndex = 0;
 const STORAGE_KEY = 'currencyCards';
@@ -64,6 +72,7 @@ function attachEventListeners() {
 
     // 管理頁面功能
     saveBtn.addEventListener('click', saveCurrencyCard);
+    document.getElementById('autoFillBtn').addEventListener('click', autoFillCurrencyData);
 
     // 基準幣別輸入大寫轉換
     baseCurrency.addEventListener('input', (e) => {
@@ -158,6 +167,40 @@ function resetForm() {
     rateToTWDInput.value = '';
     rateToJPYInput.value = '';
     analysisTextarea.value = '';
+}
+
+// ========================
+// 自動填入功能
+// ========================
+
+async function autoFillCurrencyData() {
+    const currency = baseCurrency.value.trim().toUpperCase();
+
+    if (!currency || currency.length !== 3) {
+        showMessage('請輸入有效的幣別代碼（3 個字母）', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`https://api.exchangerate.host/latest?base=${currency}&symbols=TWD,JPY`);
+        const data = await response.json();
+
+        if (!data || !data.rates) {
+            throw new Error('無法取得匯率資料');
+        }
+
+        const rateTWD = data.rates.TWD ? data.rates.TWD.toFixed(2) : '';
+        const rateJPY = data.rates.JPY ? data.rates.JPY.toFixed(2) : '';
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
+
+        rateToTWDInput.value = rateTWD;
+        rateToJPYInput.value = rateJPY;
+        analysisTextarea.value = `${dateStr} 自動填入匯率：${currency} 對 TWD ${rateTWD}，對 JPY ${rateJPY}`;
+        showMessage(`已自動填入 ${currency} 匯率`, 'success');
+    } catch (error) {
+        showMessage(`自動填入失敗：${error.message}`, 'error');
+    }
 }
 
 // ========================
@@ -297,6 +340,11 @@ function loadCards() {
             console.error('Failed to parse stored cards:', error);
             cards = [];
         }
+    }
+
+    if (cards.length === 0) {
+        cards = [...DEFAULT_CARDS];
+        saveCards();
     }
 }
 
