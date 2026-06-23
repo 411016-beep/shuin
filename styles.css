@@ -452,6 +452,34 @@ body {
     border: 1px solid rgba(15, 33, 56, 0.08);
     border-radius: 14px;
     transition: all 0.3s ease;
+    gap: 1rem;
+}
+
+.saved-card-info {
+    cursor: pointer;
+}
+
+.saved-card-info:hover .saved-card-currency {
+    color: var(--accent-strong);
+}
+
+.saved-card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.saved-card-view {
+    padding: 0.5rem 0.9rem;
+    background-color: rgba(29, 78, 216, 0.08);
+    color: var(--accent-strong);
+    border: 1px solid rgba(29, 78, 216, 0.2);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+}
+
+.saved-card-view:hover {
+    background-color: rgba(29, 78, 216, 0.14);
 }
 
 .saved-card-item:hover {

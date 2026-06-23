@@ -305,6 +305,15 @@ function deleteCard(currency) {
 // 已存卡片列表渲染
 // ========================
 
+function selectCard(currency) {
+    const index = cards.findIndex(card => card.currency === currency);
+    if (index !== -1) {
+        currentIndex = index;
+        renderCard();
+        switchPage('main');
+    }
+}
+
 function renderSavedCards() {
     savedCardsList.innerHTML = '';
     cardCount.textContent = cards.length;
@@ -318,13 +327,16 @@ function renderSavedCards() {
         const cardElement = document.createElement('div');
         cardElement.className = 'saved-card-item';
         cardElement.innerHTML = `
-            <div class="saved-card-info">
+            <div class="saved-card-info" onclick="selectCard('${cardData.currency}')">
                 <div class="saved-card-currency">${cardData.currency}</div>
                 <div class="saved-card-rates">
                     TWD: ${cardData.rateTWD}
                 </div>
             </div>
-            <button class="saved-card-delete" onclick="deleteCard('${cardData.currency}')">刪除</button>
+            <div class="saved-card-actions">
+                <button class="saved-card-view" onclick="selectCard('${cardData.currency}')">查看</button>
+                <button class="saved-card-delete" onclick="deleteCard('${cardData.currency}')">刪除</button>
+            </div>
         `;
         savedCardsList.appendChild(cardElement);
     });
