@@ -49,6 +49,42 @@ body {
     box-shadow: 0 16px 50px rgba(15, 33, 56, 0.12);
 }
 
+/* 導覽按鈕（讓首頁/管理更顯眼） */
+.nav-links {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.nav-btn {
+    display: inline-block;
+    padding: 0.5rem 0.9rem;
+    border-radius: 10px;
+    background: transparent;
+    color: #ffffff;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.06);
+    transition: all 180ms ease;
+}
+
+.nav-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(11, 77, 191, 0.12);
+}
+
+.nav-btn.active {
+    background: linear-gradient(90deg, var(--accent-color), var(--accent-strong));
+    color: #fff;
+    border-color: rgba(255,255,255,0.08);
+    box-shadow: 0 10px 30px rgba(11, 77, 191, 0.18);
+}
+
+.nav-btn:focus {
+    outline: 3px solid rgba(13,110,253,0.12);
+}
+
 /* 卡片（樣式在下方定義） */
 
 #management-page.active {
