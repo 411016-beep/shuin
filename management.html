@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理卡片 - Shuin</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <h1 class="app-title">管理卡片</h1>
+            <div class="nav-links">
+                <a class="nav-btn" href="index.html">首頁</a>
+                <a class="nav-btn active" href="management.html">管理</a>
+            </div>
+        </nav>
+
+        <main class="page" id="management-page">
+            <div class="management-container">
+                <h2>新增卡片</h2>
+                
+                <div class="form-section">
+                    <label for="baseCurrency">選擇幣別</label>
+                    <div class="currency-input-row">
+                        <select id="baseCurrency" class="currency-input">
+                            <option value="" disabled selected>請選擇幣別</option>
+                            <option value="USD">USD 美元</option>
+                            <option value="EUR">EUR 歐元</option>
+                            <option value="GBP">GBP 英鎊</option>
+                            <option value="AUD">AUD 澳幣</option>
+                            <option value="HKD">HKD 港幣</option>
+                            <option value="SGD">SGD 新加坡幣</option>
+                            <option value="CAD">CAD 加拿大幣</option>
+                            <option value="other">其他幣別</option>
+                        </select>
+                        <input
+                            type="text"
+                            id="customCurrency"
+                            placeholder="輸入幣別代碼"
+                            maxlength="3"
+                            class="currency-input hidden"
+                        >
+                        <button type="button" class="control-btn" id="autoFillBtn">⚡ 自動填入</button>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <label for="rateToTWDInput">對新台幣匯率</label>
+                    <input 
+                        type="number" 
+                        id="rateToTWDInput" 
+                        placeholder="僅輸入數字，例如 31.50"
+                        step="0.01"
+                        inputmode="decimal"
+                        class="form-input"
+                    >
+                    <div class="field-note">只需輸入數值，不要加上幣別代碼</div>
+                </div>
+
+                <div class="form-section">
+                    <label for="analysisTextarea">備忘錄</label>
+                    <textarea 
+                        id="analysisTextarea" 
+                        placeholder="輸入備忘錄或筆記"
+                        rows="4"
+                        class="form-textarea"
+                    ></textarea>
+                </div>
+
+                <button class="save-btn" id="saveBtn">儲存卡片</button>
+
+                <!-- 已存卡片列表 -->
+                <div class="saved-cards-section">
+                    <h3>已存卡片 (<span id="cardCount">0</span>)</h3>
+                    <div class="saved-cards-list" id="savedCardsList">
+                        <!-- 動態生成的卡片將放在這裡 -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

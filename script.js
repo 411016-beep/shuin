@@ -18,32 +18,13 @@ let cards = [];
 let currentIndex = 0;
 const STORAGE_KEY = 'currencyCards';
 
-// GAS 部署網址
+// GAS 部署網址（如需部署請改為實際網址）
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzJ6cXjMKZj47W6Jic0itnBFz3WYBAZW1oEjoYXdW7p7rq2V5ANpelI6qro8oczOgfn/exec';
 
-// ========================
-// DOM 元素引用
-// ========================
-
-const card = document.getElementById('card');
-const cardWrapper = document.getElementById('cardWrapper');
-const currencyCode = document.getElementById('currencyCode');
-const rateToTWD = document.getElementById('rateToTWD');
-const analysisText = document.getElementById('analysisText');
-const cardIndicator = document.getElementById('cardIndicator');
-const prevBtn = document.getElementById('prevBtn');
-const nextBtn = document.getElementById('nextBtn');
-
-const baseCurrency = document.getElementById('baseCurrency');
-const customCurrency = document.getElementById('customCurrency');
-const rateToTWDInput = document.getElementById('rateToTWDInput');
-const analysisTextarea = document.getElementById('analysisTextarea');
-const saveBtn = document.getElementById('saveBtn');
-const savedCardsList = document.getElementById('savedCardsList');
-const cardCount = document.getElementById('cardCount');
-
-const navBtns = document.querySelectorAll('.nav-btn');
-const pages = document.querySelectorAll('.page');
+// DOM 元素（會在不同頁面初始化）
+let card, cardWrapper, currencyCode, rateToTWD, analysisText, cardIndicator, prevBtn, nextBtn;
+let baseCurrency, customCurrency, rateToTWDInput, analysisTextarea, saveBtn, savedCardsList, cardCount;
+let navBtns, pages, addCardBtn;
 
 // ========================
 // 初始化
@@ -51,36 +32,73 @@ const pages = document.querySelectorAll('.page');
 
 document.addEventListener('DOMContentLoaded', () => {
     loadCards();
-    renderCard();
-    attachEventListeners();
-    renderSavedCards();
+
+    // 若在首頁（有 #card 元素），初始化首頁相關功能
+    if (document.getElementById('card')) {
+        initMainPage();
+    }
+
+    // 若在管理頁（有 #management-page 或 savedCardsList），初始化管理頁功能
+    if (document.getElementById('management-page') || document.getElementById('savedCardsList')) {
+        initManagementPage();
+    }
 });
 
 // ========================
 // 事件監聽器
 // ========================
 
-function attachEventListeners() {
-    // 卡片翻轉
-    cardWrapper.addEventListener('click', toggleCardFlip);
+function initMainPage() {
+    // 元素綁定（首頁）
+    card = document.getElementById('card');
+    cardWrapper = document.getElementById('cardWrapper');
+    currencyCode = document.getElementById('currencyCode');
+    rateToTWD = document.getElementById('rateToTWD');
+    analysisText = document.getElementById('analysisText');
+    cardIndicator = document.getElementById('cardIndicator');
+    prevBtn = document.getElementById('prevBtn');
+    nextBtn = document.getElementById('nextBtn');
+    addCardBtn = document.getElementById('addCardBtn');
 
-    // 導航按鈕
-    prevBtn.addEventListener('click', previousCard);
-    nextBtn.addEventListener('click', nextCard);
+    attachMainEventListeners();
+    // 若有 currency query param，選中對應卡片
+    const params = new URLSearchParams(window.location.search);
+    const currencyParam = params.get('currency');
+    if (currencyParam) {
+        const idx = cards.findIndex(c => c.currency === currencyParam.toUpperCase());
+        if (idx !== -1) currentIndex = idx;
+        history.replaceState(null, '', window.location.pathname);
+    }
 
-    // 分頁切換
-    navBtns.forEach(btn => {
-        btn.addEventListener('click', () => switchPage(btn.dataset.page));
-    });
+    renderCard();
+}
 
-    // 管理頁面功能
-    saveBtn.addEventListener('click', saveCurrencyCard);
-    document.getElementById('autoFillBtn').addEventListener('click', autoFillCurrencyData);
-    document.getElementById('addCardBtn').addEventListener('click', () => switchPage('management'));
-    baseCurrency.addEventListener('change', handleCurrencySelection);
-    customCurrency.addEventListener('input', (e) => {
-        e.target.value = e.target.value.toUpperCase();
-    });
+function attachMainEventListeners() {
+    if (cardWrapper) cardWrapper.addEventListener('click', toggleCardFlip);
+    if (prevBtn) prevBtn.addEventListener('click', previousCard);
+    if (nextBtn) nextBtn.addEventListener('click', nextCard);
+    if (addCardBtn) addCardBtn.addEventListener('click', () => { window.location.href = 'management.html'; });
+}
+
+function initManagementPage() {
+    baseCurrency = document.getElementById('baseCurrency');
+    customCurrency = document.getElementById('customCurrency');
+    rateToTWDInput = document.getElementById('rateToTWDInput');
+    analysisTextarea = document.getElementById('analysisTextarea');
+    saveBtn = document.getElementById('saveBtn');
+    savedCardsList = document.getElementById('savedCardsList');
+    cardCount = document.getElementById('cardCount');
+
+    attachManagementEventListeners();
+    renderSavedCards();
+}
+
+function attachManagementEventListeners() {
+    if (saveBtn) saveBtn.addEventListener('click', saveCurrencyCard);
+    const autoFillBtn = document.getElementById('autoFillBtn');
+    if (autoFillBtn) autoFillBtn.addEventListener('click', autoFillCurrencyData);
+    if (baseCurrency) baseCurrency.addEventListener('change', handleCurrencySelection);
+    if (customCurrency) customCurrency.addEventListener('input', (e) => { e.target.value = e.target.value.toUpperCase(); });
 }
 
 // ========================
@@ -120,13 +138,15 @@ function nextCard() {
 // ========================
 
 function renderCard() {
+    if (!currencyCode || !rateToTWD || !analysisText || !cardIndicator) return;
+
     if (cards.length === 0) {
         currencyCode.textContent = 'USD';
         rateToTWD.textContent = '-';
         analysisText.textContent = '-';
         cardIndicator.textContent = '0 / 0';
-        prevBtn.disabled = true;
-        nextBtn.disabled = true;
+        if (prevBtn) prevBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
         return;
     }
 
@@ -139,8 +159,8 @@ function renderCard() {
     analysisText.textContent = currentCard.analysis || '尚無備忘錄';
     cardIndicator.textContent = `${currentIndex + 1} / ${cards.length}`;
 
-    prevBtn.disabled = currentIndex === 0;
-    nextBtn.disabled = currentIndex === cards.length - 1;
+    if (prevBtn) prevBtn.disabled = currentIndex === 0;
+    if (nextBtn) nextBtn.disabled = currentIndex === cards.length - 1;
 }
 
 // ========================
@@ -148,6 +168,8 @@ function renderCard() {
 // ========================
 
 function switchPage(pageName) {
+    if (!navBtns || !pages) return;
+
     navBtns.forEach(btn => {
         btn.classList.toggle('active', btn.dataset.page === pageName);
     });
@@ -167,6 +189,7 @@ function switchPage(pageName) {
 // ========================
 
 function resetForm() {
+    if (!baseCurrency || !customCurrency || !rateToTWDInput || !analysisTextarea) return;
     baseCurrency.value = '';
     customCurrency.value = '';
     customCurrency.classList.add('hidden');
@@ -307,14 +330,20 @@ function deleteCard(currency) {
 
 function selectCard(currency) {
     const index = cards.findIndex(card => card.currency === currency);
-    if (index !== -1) {
+    if (index === -1) return;
+
+    // 如果在首頁直接選擇，否則從管理頁導回首頁並附帶 query
+    if (document.getElementById('card')) {
         currentIndex = index;
+        resetCardToFront();
         renderCard();
-        switchPage('main');
+    } else {
+        window.location.href = `index.html?currency=${encodeURIComponent(currency)}`;
     }
 }
 
 function renderSavedCards() {
+    if (!savedCardsList || !cardCount) return;
     savedCardsList.innerHTML = '';
     cardCount.textContent = cards.length;
 
