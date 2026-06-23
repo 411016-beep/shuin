@@ -3,11 +3,11 @@
 // ========================
 
 const DEFAULT_CARDS = [
-    { currency: 'EUR', rateTWD: '-', rateJPY: '-', analysis: '歐元匯率卡片' },
-    { currency: 'GBP', rateTWD: '-', rateJPY: '-', analysis: '英鎊匯率卡片' },
-    { currency: 'AUD', rateTWD: '-', rateJPY: '-', analysis: '澳幣匯率卡片' },
-    { currency: 'JPY', rateTWD: '-', rateJPY: '-', analysis: '日圓匯率卡片' },
-    { currency: 'USD', rateTWD: '-', rateJPY: '-', analysis: '美元匯率卡片' }
+    { currency: 'EUR', rateTWD: '-', analysis: '歐元匯率卡片' },
+    { currency: 'GBP', rateTWD: '-', analysis: '英鎊匯率卡片' },
+    { currency: 'AUD', rateTWD: '-', analysis: '澳幣匯率卡片' },
+    { currency: 'JPY', rateTWD: '-', analysis: '日圓匯率卡片' },
+    { currency: 'USD', rateTWD: '-', analysis: '美元匯率卡片' }
 ];
 
 let cards = [];
@@ -25,15 +25,14 @@ const card = document.getElementById('card');
 const cardWrapper = document.getElementById('cardWrapper');
 const currencyCode = document.getElementById('currencyCode');
 const rateToTWD = document.getElementById('rateToTWD');
-const rateToJPY = document.getElementById('rateToJPY');
 const analysisText = document.getElementById('analysisText');
 const cardIndicator = document.getElementById('cardIndicator');
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
 
 const baseCurrency = document.getElementById('baseCurrency');
+const customCurrency = document.getElementById('customCurrency');
 const rateToTWDInput = document.getElementById('rateToTWDInput');
-const rateToJPYInput = document.getElementById('rateToJPYInput');
 const analysisTextarea = document.getElementById('analysisTextarea');
 const saveBtn = document.getElementById('saveBtn');
 const savedCardsList = document.getElementById('savedCardsList');
@@ -74,9 +73,8 @@ function attachEventListeners() {
     saveBtn.addEventListener('click', saveCurrencyCard);
     document.getElementById('autoFillBtn').addEventListener('click', autoFillCurrencyData);
     document.getElementById('addCardBtn').addEventListener('click', () => switchPage('management'));
-
-    // 基準幣別輸入大寫轉換
-    baseCurrency.addEventListener('input', (e) => {
+    baseCurrency.addEventListener('change', handleCurrencySelection);
+    customCurrency.addEventListener('input', (e) => {
         e.target.value = e.target.value.toUpperCase();
     });
 }
@@ -121,7 +119,6 @@ function renderCard() {
     if (cards.length === 0) {
         currencyCode.textContent = 'USD';
         rateToTWD.textContent = '-';
-        rateToJPY.textContent = '-';
         analysisText.textContent = '-';
         cardIndicator.textContent = '0 / 0';
         prevBtn.disabled = true;
@@ -132,7 +129,6 @@ function renderCard() {
     const currentCard = cards[currentIndex];
     currencyCode.textContent = currentCard.currency;
     rateToTWD.textContent = currentCard.rateTWD;
-    rateToJPY.textContent = currentCard.rateJPY;
     analysisText.textContent = currentCard.analysis;
     cardIndicator.textContent = `${currentIndex + 1} / ${cards.length}`;
 
@@ -165,8 +161,9 @@ function switchPage(pageName) {
 
 function resetForm() {
     baseCurrency.value = '';
+    customCurrency.value = '';
+    customCurrency.classList.add('hidden');
     rateToTWDInput.value = '';
-    rateToJPYInput.value = '';
     analysisTextarea.value = '';
 }
 
@@ -174,16 +171,33 @@ function resetForm() {
 // 自動填入功能
 // ========================
 
+function getSelectedCurrency() {
+    if (baseCurrency.value === 'other') {
+        return customCurrency.value.trim().toUpperCase();
+    }
+    return baseCurrency.value;
+}
+
+function handleCurrencySelection() {
+    if (baseCurrency.value === 'other') {
+        customCurrency.classList.remove('hidden');
+        customCurrency.focus();
+    } else {
+        customCurrency.classList.add('hidden');
+        customCurrency.value = '';
+    }
+}
+
 async function autoFillCurrencyData() {
-    const currency = baseCurrency.value.trim().toUpperCase();
+    const currency = getSelectedCurrency();
 
     if (!currency || currency.length !== 3) {
-        showMessage('請輸入有效的幣別代碼（3 個字母）', 'error');
+        showMessage('請選擇或輸入有效的幣別代碼（3 個字母）', 'error');
         return;
     }
 
     try {
-        const response = await fetch(`https://api.exchangerate.host/latest?base=${currency}&symbols=TWD,JPY`);
+        const response = await fetch(`https://api.exchangerate.host/latest?base=${currency}&symbols=TWD`);
         const data = await response.json();
 
         if (!data || !data.rates) {
@@ -191,13 +205,11 @@ async function autoFillCurrencyData() {
         }
 
         const rateTWD = data.rates.TWD ? data.rates.TWD.toFixed(2) : '';
-        const rateJPY = data.rates.JPY ? data.rates.JPY.toFixed(2) : '';
         const today = new Date();
         const dateStr = `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
 
         rateToTWDInput.value = rateTWD;
-        rateToJPYInput.value = rateJPY;
-        analysisTextarea.value = `${dateStr} 自動填入匯率：${currency} 對 TWD ${rateTWD}，對 JPY ${rateJPY}`;
+        analysisTextarea.value = `${dateStr} 自動填入匯率：${currency} 對 TWD ${rateTWD}`;
         showMessage(`已自動填入 ${currency} 匯率`, 'success');
     } catch (error) {
         showMessage(`自動填入失敗：${error.message}`, 'error');
@@ -209,19 +221,17 @@ async function autoFillCurrencyData() {
 // ========================
 
 function saveCurrencyCard() {
-    const currency = baseCurrency.value.trim().toUpperCase();
+    const currency = getSelectedCurrency();
     const rateTWD = rateToTWDInput.value.trim();
-    const rateJPY = rateToJPYInput.value.trim();
     const analysis = analysisTextarea.value.trim();
 
-    // 驗證
     if (!currency || currency.length !== 3) {
-        showMessage('請輸入有效的幣別代碼（3 個字母）', 'error');
+        showMessage('請選擇或輸入有效的幣別代碼（3 個字母）', 'error');
         return;
     }
 
-    if (!rateTWD || !rateJPY) {
-        showMessage('請填入對台幣和日圓的匯率', 'error');
+    if (!rateTWD) {
+        showMessage('請填入對新台幣的匯率', 'error');
         return;
     }
 
@@ -230,27 +240,23 @@ function saveCurrencyCard() {
         return;
     }
 
-    // 檢查是否已存在
     const existingIndex = cards.findIndex(card => card.currency === currency);
 
     if (existingIndex !== -1) {
-        cards[existingIndex] = { currency, rateTWD, rateJPY, analysis };
+        cards[existingIndex] = { currency, rateTWD, analysis };
         showMessage(`已更新 ${currency} 卡片`, 'success');
     } else {
-        cards.push({ currency, rateTWD, rateJPY, analysis });
+        cards.push({ currency, rateTWD, analysis });
         showMessage(`已新增 ${currency} 卡片`, 'success');
     }
 
-    // 按字母順序排序
     cards.sort((a, b) => a.currency.localeCompare(b.currency));
 
-    // 保存到本地
     saveCards();
     sendToGAS();
-
     resetForm();
     renderSavedCards();
-    currentIndex = 0;
+    currentIndex = cards.findIndex(card => card.currency === currency);
     renderCard();
 }
 
@@ -294,7 +300,7 @@ function renderSavedCards() {
             <div class="saved-card-info">
                 <div class="saved-card-currency">${cardData.currency}</div>
                 <div class="saved-card-rates">
-                    TWD: ${cardData.rateTWD} | JPY: ${cardData.rateJPY}
+                    TWD: ${cardData.rateTWD}
                 </div>
             </div>
             <button class="saved-card-delete" onclick="deleteCard('${cardData.currency}')">刪除</button>
