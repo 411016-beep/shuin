@@ -128,7 +128,9 @@ function renderCard() {
 
     const currentCard = cards[currentIndex];
     currencyCode.textContent = currentCard.currency;
-    rateToTWD.textContent = currentCard.rateTWD;
+    rateToTWD.textContent = currentCard.rateTWD && currentCard.rateTWD !== '-'
+        ? `1 ${currentCard.currency} = ${currentCard.rateTWD} TWD`
+        : '-';
     analysisText.textContent = currentCard.analysis;
     cardIndicator.textContent = `${currentIndex + 1} / ${cards.length}`;
 
