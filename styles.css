@@ -205,6 +205,12 @@ body {
     gap: 1.5rem;
 }
 
+.back-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--accent-strong);
+    letter-spacing: -0.5px;
+}
 .rate-section {
     display: flex;
     gap: 1.5rem;
