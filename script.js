@@ -2,13 +2,17 @@
 // 全局變數
 // ========================
 
+// 靜態寫死範例：卡片背面會顯示固定的 TWD 匯率
 const DEFAULT_CARDS = [
-    { currency: 'EUR', rateTWD: '-', analysis: '歐元匯率卡片' },
-    { currency: 'GBP', rateTWD: '-', analysis: '英鎊匯率卡片' },
-    { currency: 'AUD', rateTWD: '-', analysis: '澳幣匯率卡片' },
-    { currency: 'JPY', rateTWD: '-', analysis: '日圓匯率卡片' },
-    { currency: 'USD', rateTWD: '-', analysis: '美元匯率卡片' }
+    { currency: 'EUR', rateTWD: '34.20', analysis: '歐元匯率卡片' },
+    { currency: 'GBP', rateTWD: '42.10', analysis: '英鎊匯率卡片' },
+    { currency: 'AUD', rateTWD: '21.50', analysis: '澳幣匯率卡片' },
+    { currency: 'JPY', rateTWD: '0.22', analysis: '日圓匯率卡片' },
+    { currency: 'USD', rateTWD: '31.50', analysis: '美元匯率卡片' }
 ];
+
+// 如果你要改成手動寫死更多匯率，直接修改 DEFAULT_CARDS 中的 rateTWD 值即可。
+
 
 let cards = [];
 let currentIndex = 0;
@@ -130,7 +134,7 @@ function renderCard() {
     currencyCode.textContent = currentCard.currency;
     rateToTWD.textContent = currentCard.rateTWD && currentCard.rateTWD !== '-'
         ? `1 ${currentCard.currency} = ${currentCard.rateTWD} TWD`
-        : '-';
+        : '匯率尚未輸入';
     analysisText.textContent = currentCard.analysis;
     cardIndicator.textContent = `${currentIndex + 1} / ${cards.length}`;
 
@@ -199,6 +203,7 @@ async function autoFillCurrencyData() {
     }
 
     try {
+        // 即時匯率 API 範例：exchangerate.host
         const response = await fetch(`https://api.exchangerate.host/latest?base=${currency}&symbols=TWD`);
         const data = await response.json();
 
@@ -217,6 +222,17 @@ async function autoFillCurrencyData() {
         showMessage(`自動填入失敗：${error.message}`, 'error');
     }
 }
+
+// 如果你想要單獨取即時匯率並顯示在頁面上，可以用下面的函式：
+// async function fetchRateToTWD(currency) {
+//     const response = await fetch(`https://api.exchangerate.host/latest?base=${currency}&symbols=TWD`);
+//     const data = await response.json();
+//     return data?.rates?.TWD ? data.rates.TWD.toFixed(2) : null;
+// }
+//
+// 使用方式：
+// const liveRate = await fetchRateToTWD('AUD');
+// console.log(`1 AUD = ${liveRate} TWD`);
 
 // ========================
 // 儲存卡片
