@@ -73,6 +73,7 @@ function attachEventListeners() {
     // 管理頁面功能
     saveBtn.addEventListener('click', saveCurrencyCard);
     document.getElementById('autoFillBtn').addEventListener('click', autoFillCurrencyData);
+    document.getElementById('addCardBtn').addEventListener('click', () => switchPage('management'));
 
     // 基準幣別輸入大寫轉換
     baseCurrency.addEventListener('input', (e) => {
